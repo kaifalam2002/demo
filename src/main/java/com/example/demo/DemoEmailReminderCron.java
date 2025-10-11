@@ -22,7 +22,7 @@ public class DemoEmailReminderCron {
     private CustomerInvoiceRepository invoiceRepository;
 
     // Example: Send daily emails at 3:05 PM IST
-    @Scheduled(cron = "0 05 15 * * ?", zone = "Asia/Kolkata")
+    @Scheduled(cron = "0 15 17 * * ?", zone = "Asia/Kolkata")
     public void sendDailyInvoiceReminders() {
         logger.info("Starting daily invoice reminder cron job...");
 
@@ -69,6 +69,7 @@ public class DemoEmailReminderCron {
                             "Invoice_" + invoice.getId() + ".pdf"
                     );
                     logger.info("Email sent successfully for invoice ID: {}", invoice.getId());
+                    Thread.sleep(3000); // 3 seconds
                 } catch (Exception e) {
                     logger.error("Failed to send email for invoice ID: {}. Error: {}", invoice.getId(), e.getMessage(), e);
                 }
