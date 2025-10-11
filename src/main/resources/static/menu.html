@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Billing Portal</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <link rel="stylesheet" href="menu.css" />
 </head>
 <body>
@@ -24,9 +25,8 @@
     <!-- Main Content -->
     <section class="content">
       <div class="header">
-       <h2>Welcome back, <span id="user-name">Loading...</span>!</h2>
-<p id="project-name" style="color: gray; font-size: 14px;"></p>
-
+        <h2>Welcome back, <span id="user-name">Loading...</span>!</h2>
+        <p id="project-name" style="color: gray; font-size: 14px;"></p>
       </div>
 
       <!-- Dashboard Section -->
@@ -43,6 +43,32 @@
           <div class="card">
             <h3>Reminders Sent</h3>
             <p id="reminders-sent">--</p>
+          </div>
+        </div>
+
+        <div class="analytics-section">
+          <div class="analytics-card">
+            <h3>Invoice Reminders</h3>
+            <div class="reminder-stats">
+              <p class="big-number" id="reminders-total">15</p>
+              <p class="sub-label">Sent</p>
+            </div>
+            <canvas id="reminders-chart"></canvas>
+          </div>
+
+          <div class="analytics-card">
+            <h3>Invoice Analytics</h3>
+            <canvas id="invoice-pie-chart"></canvas>
+            <div class="pie-legend">
+              <div class="legend-item">
+                <span class="legend-color" style="background: #4285F4;"></span>
+                <span>Fulfilled: <strong id="fulfilled-count">0</strong></span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-color" style="background: #D3D3D3;"></span>
+                <span>Unfulfilled: <strong id="unfulfilled-count">0</strong></span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -111,10 +137,15 @@
         // Update Dashboard Summary
         const pendingBills = bills.filter(b => !b.isPaid);
         const totalPending = pendingBills.reduce((sum, b) => sum + b.amount, 0);
+        const paidBills = bills.filter(b => b.isPaid);
 
         document.getElementById("invoices-count").textContent = bills.length;
         document.getElementById("pending-amount").textContent = `₹${totalPending.toLocaleString()}`;
         document.getElementById("reminders-sent").textContent = Math.floor(Math.random() * 20);
+
+        // Update Analytics
+        document.getElementById("fulfilled-count").textContent = paidBills.length;
+        document.getElementById("unfulfilled-count").textContent = pendingBills.length;
 
         // Dashboard Table
         const dashTable = document.getElementById("payments-table");
@@ -148,6 +179,10 @@
           `;
           tbody.appendChild(row);
         });
+
+        // Draw Charts
+        drawReminderChart();
+        drawInvoicePieChart(paidBills.length, pendingBills.length);
       } catch (err) {
         console.error(err);
         alert("Error loading bills.");
@@ -165,30 +200,110 @@
       }
     }
 
-   async function loadUserInfo() {
-  try {
-    const response = await fetch('/api/user-info');
-    if (!response.ok) throw new Error("User not logged in");
+    async function loadUserInfo() {
+      try {
+        const response = await fetch('/api/user-info');
+        if (!response.ok) throw new Error("User not logged in");
 
-    const user = await response.json();
+        const user = await response.json();
 
-    // Update name and project dynamically
-    document.getElementById("user-name").textContent = user.name || "User";
-    document.getElementById("project-name").textContent = user.project 
-      ? `Project: ${user.project}`
-      : "";
-  } catch (err) {
-    console.error("Error loading user info:", err);
-    document.getElementById("user-name").textContent = "User";
-  }
-}
+        // Update name and project dynamically
+        document.getElementById("user-name").textContent = user.name || "User";
+        document.getElementById("project-name").textContent = user.project 
+          ? `Project: ${user.project}`
+          : "";
+      } catch (err) {
+        console.error("Error loading user info:", err);
+        document.getElementById("user-name").textContent = "User";
+      }
+    }
 
-// When page loads
-document.addEventListener("DOMContentLoaded", () => {
-  loadBills();
-  loadUserInfo();
-});
+    // Chart drawing functions
+    let reminderChartInstance = null;
+    let pieChartInstance = null;
 
+    function drawReminderChart() {
+      const ctx = document.getElementById('reminders-chart').getContext('2d');
+      
+      // Static data for the week
+      const data = {
+        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+        datasets: [{
+          label: 'Reminders Sent',
+          data: [2, 3, 2, 5, 4, 6],
+          borderColor: '#4285F4',
+          backgroundColor: 'rgba(66, 133, 244, 0.1)',
+          tension: 0.4,
+          fill: true,
+          pointBackgroundColor: '#4285F4',
+          pointRadius: 4,
+          pointHoverRadius: 6
+        }]
+      };
+
+      if (reminderChartInstance) {
+        reminderChartInstance.destroy();
+      }
+
+      reminderChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: data,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                stepSize: 2
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function drawInvoicePieChart(fulfilled, unfulfilled) {
+      const ctx = document.getElementById('invoice-pie-chart').getContext('2d');
+      
+      const data = {
+        labels: ['Fulfilled', 'Unfulfilled'],
+        datasets: [{
+          data: [fulfilled, unfulfilled],
+          backgroundColor: ['#4285F4', '#D3D3D3'],
+          borderWidth: 0
+        }]
+      };
+
+      if (pieChartInstance) {
+        pieChartInstance.destroy();
+      }
+
+      pieChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: data,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            }
+          }
+        }
+      });
+    }
+
+    // When page loads
+    document.addEventListener("DOMContentLoaded", () => {
+      loadBills();
+      loadUserInfo();
+    });
   </script>
 </body>
 </html>
