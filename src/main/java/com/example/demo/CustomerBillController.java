@@ -2,6 +2,7 @@ package com.example.demo;
 
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -22,6 +23,9 @@ public class CustomerBillController {
 private CustomerInvoiceRepository repo;
 @Autowired
     private EmailService emailService;  
+
+    @Autowired
+    private UserRepository userRepository;
 
     @PostMapping("/download-bill")
 public ResponseEntity<byte[]> downloadBill(@RequestBody CustomerInvoice bill,  HttpSession session) {
@@ -90,6 +94,21 @@ public ResponseEntity<String> sendMail(@RequestParam String to, @RequestParam St
     emailService.sendSimpleEmail(to, subject, text);
     return ResponseEntity.ok("Email sent successfully!");
 }
+
+@GetMapping("/user-info")
+    public ResponseEntity<User> getUserInfo(HttpSession session) {
+        String email = (String) session.getAttribute("loggedInEmail");
+        if (email == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        Optional<User> userOpt = userRepository.findByEmail(email);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok(userOpt.get());
+    }
 
 
 }

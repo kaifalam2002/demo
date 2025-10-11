@@ -4,15 +4,191 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Billing Portal</title>
-  <link href="menu.css" rel="stylesheet" />
+  <link rel="stylesheet" href="menu.css" />
 </head>
 <body>
-  <div class="container">
-    <h1>Billing Portal</h1>
-    <div class="options">
-      <button class="option-btn" onclick="location.href='index.html'">Generate Bill</button>
-      <button class="option-btn" onclick="location.href='trackbills.html'">Track Bills</button>
-    </div>
+  <div class="main-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="logo">
+        <img src="https://img.icons8.com/?size=100&id=BfxcvceDl78F&format=png&color=000000" alt="Remindr Logo" />
+      </div>
+
+      <ul class="menu">
+        <li class="active" onclick="showSection('dashboard')">Dashboard</li>
+        <li onclick="showSection('invoices')">Invoices</li>
+        <li onclick="showSection('customers')">Customers</li>
+      </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <section class="content">
+      <div class="header">
+       <h2>Welcome back, <span id="user-name">Loading...</span>!</h2>
+<p id="project-name" style="color: gray; font-size: 14px;"></p>
+
+      </div>
+
+      <!-- Dashboard Section -->
+      <div id="dashboard" class="section">
+        <div class="dashboard-cards">
+          <div class="card">
+            <h3>Invoices Created</h3>
+            <p id="invoices-count">--</p>
+          </div>
+          <div class="card">
+            <h3>Payments Pending</h3>
+            <p id="pending-amount">--</p>
+          </div>
+          <div class="card">
+            <h3>Reminders Sent</h3>
+            <p id="reminders-sent">--</p>
+          </div>
+        </div>
+
+        <div class="payments-section">
+          <h3>Payments</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Bill No</th>
+                <th>Customer Name</th>
+                <th>Amount</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="payments-table">
+              <!-- Dynamic rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Invoices Section -->
+      <div id="invoices" class="section" style="display:none;">
+        <h2>All Invoices</h2>
+        <table id="billsTable">
+          <thead>
+            <tr>
+              <th>Bill No</th>
+              <th>Customer Name</th>
+              <th>Address</th>
+              <th>Phone</th>
+              <th>GSTIN</th>
+              <th>Due Date</th>
+              <th>Amount</th>
+              <th>Paid</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <!-- Customers Section -->
+      <div id="customers" class="section" style="display:none;">
+        <h2>Customers (Coming Soon)</h2>
+      </div>
+    </section>
   </div>
+
+  <script>
+    // Toggle visible section
+    function showSection(id) {
+      document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+      document.getElementById(id).style.display = 'block';
+      document.querySelectorAll('.menu li').forEach(li => li.classList.remove('active'));
+      document.querySelector(`.menu li[onclick="showSection('${id}')"]`).classList.add('active');
+    }
+
+    // Load Bills from API
+    async function loadBills() {
+      try {
+        const response = await fetch('/api/track-bills');
+        if (!response.ok) throw new Error("Failed to fetch bills");
+        const bills = await response.json();
+
+        // Update Dashboard Summary
+        const pendingBills = bills.filter(b => !b.isPaid);
+        const totalPending = pendingBills.reduce((sum, b) => sum + b.amount, 0);
+
+        document.getElementById("invoices-count").textContent = bills.length;
+        document.getElementById("pending-amount").textContent = `₹${totalPending.toLocaleString()}`;
+        document.getElementById("reminders-sent").textContent = Math.floor(Math.random() * 20);
+
+        // Dashboard Table
+        const dashTable = document.getElementById("payments-table");
+        dashTable.innerHTML = "";
+        bills.slice(0, 5).forEach(bill => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${bill.id}</td>
+            <td>${bill.customerName}</td>
+            <td>₹${bill.amount.toFixed(2)}</td>
+            <td class="${bill.isPaid ? 'paid' : 'pending'}">${bill.isPaid ? 'Paid' : 'Pending'}</td>
+          `;
+          dashTable.appendChild(row);
+        });
+
+        // Invoices Table
+        const tbody = document.querySelector('#billsTable tbody');
+        tbody.innerHTML = '';
+        bills.forEach(bill => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${bill.id}</td>
+            <td>${bill.customerName}</td>
+            <td>${bill.address || ''}</td>
+            <td>${bill.phone || ''}</td>
+            <td>${bill.gstin || ''}</td>
+            <td>${bill.dueDate || ''}</td>
+            <td>${bill.amount.toFixed(2)}</td>
+            <td>${bill.isPaid ? 'Yes' : 'No'}</td>
+            <td><button class="toggle-paid" onclick="togglePaid(${bill.id})">Change Paid Status</button></td>
+          `;
+          tbody.appendChild(row);
+        });
+      } catch (err) {
+        console.error(err);
+        alert("Error loading bills.");
+      }
+    }
+
+    async function togglePaid(billId) {
+      try {
+        const response = await fetch(`/api/update-paid-status/${billId}`, { method: 'PUT' });
+        if (!response.ok) throw new Error("Failed to update paid status");
+        loadBills(); // reload data
+      } catch (err) {
+        console.error(err);
+        alert("Error updating paid status.");
+      }
+    }
+
+   async function loadUserInfo() {
+  try {
+    const response = await fetch('/api/user-info');
+    if (!response.ok) throw new Error("User not logged in");
+
+    const user = await response.json();
+
+    // Update name and project dynamically
+    document.getElementById("user-name").textContent = user.name || "User";
+    document.getElementById("project-name").textContent = user.project 
+      ? `Project: ${user.project}`
+      : "";
+  } catch (err) {
+    console.error("Error loading user info:", err);
+    document.getElementById("user-name").textContent = "User";
+  }
+}
+
+// When page loads
+document.addEventListener("DOMContentLoaded", () => {
+  loadBills();
+  loadUserInfo();
+});
+
+  </script>
 </body>
 </html>
