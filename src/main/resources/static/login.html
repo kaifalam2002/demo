@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+    <link rel="stylesheet" href="login.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Login</h1>
+    <form id="loginForm" method="POST" action="/login">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" name="email" required>
+      </div>
+
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" name="password" required>
+      </div>
+
+      <button type="submit">Login</button>
+    </form>
+
+    <p id="error-message" style="color:#d63384; text-align:center; margin-top:15px;">
+  Wrong Credentials!
+</p>
+
+  </div>
+</body>
+</html>
+<script>
+  // Wait for the DOM to load
+  document.addEventListener("DOMContentLoaded", function() {
+    const errorMessage = document.getElementById("error-message");
+
+    // Only set timeout if the element has text
+    if (errorMessage.textContent.trim() !== "") {
+      setTimeout(() => {
+        errorMessage.style.display = "none"; // hide after 10 seconds
+      }, 10000); // 10000 ms = 10 seconds
+    }
+  });
+</script>

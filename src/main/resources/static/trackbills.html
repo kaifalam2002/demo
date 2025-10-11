@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Track Bills</title>
+  <link href="style.css" rel="stylesheet" />
+  <style>
+    body, html {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+      overflow-y: auto;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 50px auto;
+      background-color: #ffffffcc;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+    h1 {
+      text-align: center;
+      color: #d63384;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    th {
+      background-color: #d63384;
+      color: white;
+    }
+    tr:hover {
+      background-color: #f1f1f1;
+    }
+    button.toggle-paid {
+      background-color: #d63384;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    button.toggle-paid:hover {
+      background-color: #b02a6f;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>My Bills</h1>
+    <table id="billsTable">
+      <thead>
+        <tr>
+          <th>Bill No</th>
+          <th>Customer Name</th>
+          <th>Address</th>
+          <th>Phone</th>
+          <th>GSTIN</th>
+          <th>Due Date</th>
+          <th>Amount</th>
+          <th>Paid</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Rows will be injected here -->
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    function loadBills() {
+      fetch('/api/track-bills')
+        .then(response => {
+          if (!response.ok) throw new Error("Failed to fetch bills");
+          return response.json();
+        })
+        .then(bills => {
+          const tbody = document.querySelector('#billsTable tbody');
+          tbody.innerHTML = ''; // clear existing rows
+          bills.forEach(bill => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${bill.id}</td>
+              <td>${bill.customerName}</td>
+              <td>${bill.address || ''}</td>
+              <td>${bill.phone || ''}</td>
+              <td>${bill.gstin || ''}</td>
+              <td>${bill.dueDate || ''}</td>
+              <td>${bill.amount.toFixed(2)}</td>
+              <td>${bill.isPaid ? 'Yes' : 'No'}</td>
+              <td>
+                <button class="toggle-paid" onclick="togglePaid(${bill.id})">
+                  Change Paid Status
+                </button>
+              </td>
+            `;
+            tbody.appendChild(row);
+          });
+        })
+        .catch(err => {
+          console.error(err);
+          alert("Error loading bills.");
+        });
+    }
+
+    function togglePaid(billId) {
+      fetch(`/api/update-paid-status/${billId}`, {
+        method: 'PUT'
+      })
+      .then(response => {
+        if (!response.ok) throw new Error("Failed to update paid status");
+        loadBills(); // reload table after change
+      })
+      .catch(err => {
+        console.error(err);
+        alert("Error updating paid status.");
+      });
+    }
+
+    // Initial load
+    loadBills();
+  </script>
+</body>
+</html>
