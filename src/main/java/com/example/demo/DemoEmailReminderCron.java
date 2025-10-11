@@ -18,7 +18,7 @@ public class DemoEmailReminderCron {
     private CustomerInvoiceRepository invoiceRepository;
 
     // Example: Send daily emails at 9 AM
-   //@Scheduled(cron = "0 05 13 * * ?") // Every day at 9:00 AM
+   @Scheduled(cron = "0 30 14 * * ?") // Every day at 9:00 AM
     public void sendDailyInvoiceReminders() {
         List<CustomerInvoice> invoices = invoiceRepository.findAll();
 
