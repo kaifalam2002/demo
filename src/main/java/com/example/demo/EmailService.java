@@ -34,7 +34,7 @@ public class EmailService {
         MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true);
         helper.setFrom("kaifalam12a@gmail.com");
         helper.setTo(to);
-        helper.setCc("mdsaifalam007@gmail.com");
+        helper.setCc("mdsaifalam0067@gmail.com");
         helper.setSubject(subject);
         helper.setText(text, true); // second parameter 'true' tells it to treat text as HTML
 
