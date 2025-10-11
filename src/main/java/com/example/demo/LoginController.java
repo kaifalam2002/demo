@@ -13,6 +13,11 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Controller
 public class LoginController {
 
+    @GetMapping("/")
+    public String redirectToLogin() {
+        return "redirect:/login.html";
+    }
+
     @Autowired
     private UserRepository userRepository;
 @PostMapping("/login")
