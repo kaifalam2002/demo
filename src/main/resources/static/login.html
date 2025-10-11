@@ -1,44 +1,61 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Login</title>
-    <link rel="stylesheet" href="login.css">
+  <meta charset="UTF-8">
+  <title>Login</title>
+  <link rel="stylesheet" href="login.css">
+  <style>
+   
+  </style>
 </head>
 <body>
   <div class="container">
-    <h1>Login</h1>
-    <form id="loginForm" method="POST" action="/login">
-      <div class="form-group">
-        <label>Email</label>
-        <input type="email" name="email" required>
-      </div>
+    <!-- Left Panel -->
+    <div class="left">
+      <img src="https://cdn-icons-png.flaticon.com/512/9068/9068643.png" alt="Mail Illustration">
+      <h2>Automate Invoice Reminders</h2>
+      <p>Trusted by finance teams to automate their AR follow-ups.</p>
+    </div>
 
-      <div class="form-group">
-        <label>Password</label>
-        <input type="password" name="password" required>
-      </div>
+    <!-- Right Panel -->
+    <div class="right">
+      <h1>Login</h1>
+      <form id="loginForm" method="POST" action="/login">
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" name="email" required>
+        </div>
 
-      <button type="submit">Login</button>
-    </form>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" name="password" required>
+        </div>
 
-    <p id="error-message" style="color:#d63384; text-align:center; margin-top:15px;">
+        <button type="submit">Login</button>
+      </form>
+
+      <p id="error-message">Wrong Credentials!</p>
+
+      <p id="create-account">
+        New here? <a href="#">Create an account</a>
+      </p>
+    </div>
+  </div>
+
+  <p id="error-message" style="color:#d63384; text-align:center; margin-top:15px; display:none;">
   Wrong Credentials!
 </p>
 
-  </div>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const errorMessage = document.getElementById("error-message");
+  const params = new URLSearchParams(window.location.search);
+  if (params.has("error")) {
+    errorMessage.style.display = "block";
+    setTimeout(() => errorMessage.style.display = "none", 10000);
+  }
+});
+</script>
+
 </body>
 </html>
-<script>
-  // Wait for the DOM to load
-  document.addEventListener("DOMContentLoaded", function() {
-    const errorMessage = document.getElementById("error-message");
-
-    // Only set timeout if the element has text
-    if (errorMessage.textContent.trim() !== "") {
-      setTimeout(() => {
-        errorMessage.style.display = "none"; // hide after 10 seconds
-      }, 10000); // 10000 ms = 10 seconds
-    }
-  });
-</script>

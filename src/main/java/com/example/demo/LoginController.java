@@ -23,19 +23,16 @@ public class LoginController {
 @PostMapping("/login")
 public String login(@RequestParam String email,
                     @RequestParam String password,
-                    HttpSession session,
-                    Model model) {
+                    HttpSession session) {
 
-    return userRepository.findByEmailAndPasswordAndActive(email, password, true)
-           .map(user -> {
-                session.setAttribute("loggedInEmail", email); // store email in session
-                return "redirect:/menu.html"; // or /index
-            })// successful login
-            .orElseGet(() -> {
-                RedirectAttributes redirectAttributes = null;
-                redirectAttributes.addFlashAttribute("error", "Invalid email or password!");
-                return "redirect:/login.html"; // redirect back on error
-            });
+    boolean validUser = userRepository.findByEmailAndPasswordAndActive(email, password, true).isPresent();
+
+    if (validUser) {
+        session.setAttribute("loggedInEmail", email);
+        return "redirect:/menu.html"; // success
+    } else {
+        return "redirect:/login.html?error=true"; // static page error handling
+    }
 }
 
 }

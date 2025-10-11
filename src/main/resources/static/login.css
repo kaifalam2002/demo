@@ -1,66 +1,140 @@
-body {
-    margin: 0;
-    font-family: 'Segoe UI', sans-serif;
-    background: linear-gradient(135deg, #ff85a2, #a18cd1);
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  
-  .container {
-    background: white;
-    padding: 30px 40px;
-    border-radius: 15px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-    max-width: 400px;
-    width: 90%;
-  }
-  
-  h1 {
-    text-align: center;
-    color: #a14ebf;
-    margin-bottom: 25px;
-  }
-  
-  .form-group {
-    margin-bottom: 20px;
-  }
-  
-  label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: bold;
-    color: #6a1b9a;
-  }
-  
-  input {
-    width: 100%;
-    padding: 10px 12px;
-    border: 2px solid #ddd;
-    border-radius: 8px;
-    font-size: 16px;
-    transition: border-color 0.3s;
-  }
-  
-  input:focus {
-    outline: none;
-    border-color: #d63384;
-  }
-  
-  button {
-    width: 100%;
-    padding: 12px;
-    background: linear-gradient(to right, #ff69b4, #a64ca6);
-    border: none;
-    border-radius: 8px;
-    color: white;
-    font-size: 18px;
-    cursor: pointer;
-    transition: background 0.3s ease;
-  }
-  
-  button:hover {
-    background: linear-gradient(to right, #ff1493, #800080);
-  }
-  
+ @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f3f4f6; /* light neutral bluish-gray background */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      display: flex;
+      background: #ffffff; /* pure white card */
+      border-radius: 16px;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+      width: 880px;
+      max-width: 95%;
+    }
+
+    /* Left Section */
+    .left {
+      flex: 1;
+      background-color: #f0f4ff; /* very light blue background */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      text-align: center;
+    }
+
+    .left img {
+      width: 160px;
+      margin-bottom: 25px;
+    }
+
+    .left h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #1e293b; /* cool dark gray */
+      margin-bottom: 10px;
+    }
+
+    .left p {
+      color: #64748b; /* muted bluish gray */
+      font-size: 0.95rem;
+      line-height: 1.5;
+      max-width: 300px;
+    }
+
+    /* Right Section */
+    .right {
+      flex: 1;
+      padding: 60px 50px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      background-color: #ffffff;
+    }
+
+    h1 {
+      font-size: 1.7rem;
+      font-weight: 700;
+      color: #0f172a; /* dark navy text */
+      margin-bottom: 25px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 0.95rem;
+      color: #334155;
+      font-weight: 500;
+    }
+
+    input[type="email"],
+    input[type="password"] {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 1rem;
+      background-color: #f8fafc;
+      transition: all 0.2s ease-in-out;
+      outline: none;
+    }
+
+    input[type="email"]:focus,
+    input[type="password"]:focus {
+      border-color: #3b82f6;
+      background-color: #ffffff;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      background-color: #3b82f6; /* blue button */
+      color: #ffffff;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    button:hover {
+      background-color: #2563eb; /* hover blue */
+    }
+
+    #error-message {
+      color: #d63384;
+      text-align: center;
+      margin-top: 15px;
+      font-size: 0.95rem;
+    }
+
+    p#create-account {
+      text-align: center;
+      margin-top: 15px;
+      color: #64748b;
+      font-size: 0.9rem;
+    }
+
+    p#create-account a {
+      color: #2563eb;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    p#create-account a:hover {
+      text-decoration: underline;
+    }
