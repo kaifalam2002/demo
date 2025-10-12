@@ -17,6 +17,8 @@ public class DemoEmailReminderCron {
 
     @Autowired
     private EmailService emailService;
+    @Autowired
+    private PdfGeneratorService pdfGeneratorService;
 
     @Autowired
     private CustomerInvoiceRepository invoiceRepository;
@@ -57,7 +59,7 @@ public class DemoEmailReminderCron {
 
                 try {
                     // Generate PDF
-                    ByteArrayInputStream pdfStream = PdfGeneratorService.generatePdf(invoice);
+                    ByteArrayInputStream pdfStream = pdfGeneratorService.generatePdf(invoice);
                     byte[] pdfBytes = pdfStream.readAllBytes();
 
                     // Send email with PDF attachment

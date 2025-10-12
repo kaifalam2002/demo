@@ -9,6 +9,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.itextpdf.text.List;
 
@@ -27,6 +28,9 @@ private CustomerInvoiceRepository repo;
     @Autowired
     private UserRepository userRepository;
 
+     @Autowired
+    private PdfGeneratorService pdfGeneratorService;
+
     @PostMapping("/download-bill")
 public ResponseEntity<byte[]> downloadBill(@ModelAttribute CustomerInvoice bill, HttpSession session) {
     String ownerEmail = (String) session.getAttribute("loggedInEmail");
@@ -34,7 +38,7 @@ public ResponseEntity<byte[]> downloadBill(@ModelAttribute CustomerInvoice bill,
 
     CustomerInvoice saved = repo.save(bill);
 
-    ByteArrayInputStream pdfStream = PdfGeneratorService.generatePdf(saved);
+    ByteArrayInputStream pdfStream = pdfGeneratorService.generatePdf(saved);
 
     HttpHeaders headers = new HttpHeaders();
     headers.add("Content-Disposition", "attachment; filename=bill.pdf");
@@ -101,4 +105,18 @@ public ResponseEntity<String> sendMail(@RequestParam String to, @RequestParam St
     }
 
 
+    @PostMapping("/upload")
+    public ResponseEntity<String> uploadExcel(@RequestParam("file") MultipartFile file,
+                                              @RequestParam("ownerEmail") String ownerEmail) {
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest().body("Please upload a valid Excel file.");
+        }
+
+        try {
+            pdfGeneratorService.importFromExcel(file, ownerEmail);
+            return ResponseEntity.ok("File uploaded and data imported successfully.");
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Error: " + e.getMessage());
+        }
+    }
 }

@@ -19,6 +19,7 @@
         <li class="active" onclick="showSection('dashboard')">Dashboard</li>
         <li onclick="showSection('invoices')">Invoices</li>
         <li onclick="showSection('generate-bill')">Generate Bill</li>
+        <li onclick="showSection('bulk-upload')">Bulk Bill Upload</li>
       </ul>
     </aside>
 
@@ -151,6 +152,57 @@
           <button type="submit" style="background:#4285F4; color:white; padding:10px 20px; border:none; border-radius:6px; cursor:pointer; font-weight:500;">Generate Bill</button>
         </form>
       </div>
+
+      <!-- Bulk Upload Section -->
+      <div id="bulk-upload" class="section" style="display:none;">
+        <h2>📊 Bulk Bill Upload</h2>
+        
+        <div class="info-box" style="background: #e8f4f8; border-left: 4px solid #2196F3; padding: 15px; margin-bottom: 25px; border-radius: 4px;">
+          <h4 style="color: #1976D2; margin-bottom: 8px; font-size: 0.95rem;">ℹ️ Instructions:</h4>
+          <ul style="margin-left: 20px; color: #555; font-size: 0.9rem;">
+            <li style="margin-bottom: 5px;">Upload an Excel file (.xlsx format) containing bill data</li>
+            <li style="margin-bottom: 5px;">Ensure your Excel file has the required columns</li>
+            <li style="margin-bottom: 5px;">Enter the owner's email address for bill assignment</li>
+          </ul>
+        </div>
+
+        <form id="bulkUploadForm" style="background:white; padding:30px; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.1); max-width:600px;">
+          <div class="form-group" style="margin-bottom:20px;">
+            <label for="ownerEmail" style="display:block; margin-bottom:8px; font-weight:600; color:#333;">Owner Email: *</label>
+            <input 
+              type="email" 
+              id="ownerEmail" 
+              name="ownerEmail" 
+              placeholder="Enter owner's email address"
+              required 
+              style="width:100%; padding:12px 15px; border:2px solid #e0e0e0; border-radius:6px; font-size:1rem; transition: all 0.3s ease;"
+            />
+          </div>
+          
+          <div class="form-group" style="margin-bottom:25px;">
+            <label for="file" style="display:block; margin-bottom:8px; font-weight:600; color:#333;">Select Excel File: *</label>
+            <input 
+              type="file" 
+              id="file" 
+              name="file" 
+              accept=".xlsx" 
+              required 
+              style="width:100%; padding:12px 15px; border:2px dashed #e0e0e0; border-radius:6px; cursor:pointer; background:#f9f9f9;"
+            />
+          </div>
+          
+          <button 
+            type="submit" 
+            id="uploadBtn"
+            style="width:100%; background:linear-gradient(135deg, #34A853 0%, #2d8e47 100%); color:white; padding:14px 20px; border:none; border-radius:8px; cursor:pointer; font-weight:600; font-size:1rem; box-shadow:0 4px 15px rgba(52, 168, 83, 0.3); transition: all 0.3s ease;"
+          >
+            Upload Excel
+          </button>
+        </form>
+        
+        <div id="uploadStatus" style="margin-top:20px; padding:15px; border-radius:6px; font-weight:500; display:none;"></div>
+      </div>
+
     </section>
   </div>
 
@@ -295,10 +347,96 @@
       });
     }
 
+    // Bulk Upload Form Handler
     document.addEventListener("DOMContentLoaded", () => {
       loadBills();
       loadUserInfo();
+
+      const bulkUploadForm = document.getElementById('bulkUploadForm');
+      const statusDiv = document.getElementById('uploadStatus');
+      const uploadBtn = document.getElementById('uploadBtn');
+
+      bulkUploadForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const fileInput = document.getElementById('file');
+        const ownerEmail = document.getElementById('ownerEmail').value;
+        const file = fileInput.files[0];
+        
+        if (!file) {
+          showStatus('Please select a file', 'error');
+          return;
+        }
+        
+        if (!file.name.endsWith('.xlsx')) {
+          showStatus('Please upload a valid Excel file (.xlsx)', 'error');
+          return;
+        }
+        
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('ownerEmail', ownerEmail);
+        
+        uploadBtn.disabled = true;
+        uploadBtn.innerHTML = 'Uploading... <span style="display:inline-block; border:3px solid #f3f3f3; border-top:3px solid white; border-radius:50%; width:16px; height:16px; animation:spin 1s linear infinite; margin-left:8px; vertical-align:middle;"></span>';
+        showStatus('Uploading file, please wait...', 'info');
+        
+        try {
+          const response = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData
+          });
+          
+          const result = await response.text();
+          
+          if (response.ok) {
+            showStatus(result || 'File uploaded and data imported successfully!', 'success');
+            bulkUploadForm.reset();
+            // Reload bills to show newly imported data
+            setTimeout(() => {
+              loadBills();
+            }, 1000);
+          } else {
+            showStatus(result || 'Upload failed. Please try again.', 'error');
+          }
+        } catch (error) {
+          showStatus('Network error: ' + error.message, 'error');
+        } finally {
+          uploadBtn.disabled = false;
+          uploadBtn.innerHTML = 'Upload Excel';
+        }
+      });
+
+      function showStatus(message, type) {
+        statusDiv.textContent = message;
+        statusDiv.className = '';
+        statusDiv.style.display = 'block';
+        
+        if (type === 'success') {
+          statusDiv.style.background = '#d4edda';
+          statusDiv.style.color = '#155724';
+          statusDiv.style.border = '1px solid #c3e6cb';
+          setTimeout(() => {
+            statusDiv.style.display = 'none';
+          }, 5000);
+        } else if (type === 'error') {
+          statusDiv.style.background = '#f8d7da';
+          statusDiv.style.color = '#721c24';
+          statusDiv.style.border = '1px solid #f5c6cb';
+        } else if (type === 'info') {
+          statusDiv.style.background = '#d1ecf1';
+          statusDiv.style.color = '#0c5460';
+          statusDiv.style.border = '1px solid #bee5eb';
+        }
+      }
     });
   </script>
+
+  <style>
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
 </body>
 </html>
