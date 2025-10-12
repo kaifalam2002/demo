@@ -11,6 +11,7 @@ import com.itextpdf.text.Image;
 import com.itextpdf.text.PageSize;
 import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.Phrase;
+import com.itextpdf.text.Rectangle;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
@@ -47,115 +48,133 @@ private CustomerInvoiceRepository repository;
 
 
     public ByteArrayInputStream generatePdf(CustomerInvoice bill) {
-        Document document = new Document(PageSize.A4, 50, 50, 50, 50);
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
+    Document document = new Document(PageSize.A4, 40, 40, 40, 40);
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
 
+    try {
+        PdfWriter.getInstance(document, out);
+        document.open();
+
+        // Add logo (optional)
         try {
-            PdfWriter.getInstance(document, out);
-            document.open();
-
-            // Add company logo (replace with your logo path or load from resources)
-            try {
-                Image logo = Image.getInstance("src/main/resources/static/logo.png"); // update path accordingly
-                logo.scaleToFit(100, 50);
-                logo.setAlignment(Element.ALIGN_CENTER);
-                document.add(logo);
-            } catch (Exception e) {
-                // Logo not found, continue without crashing
-                System.out.println("Logo not found: " + e.getMessage());
-            }
-
-            // Company name and address
-            Font companyNameFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, BaseColor.BLUE);
-            Paragraph companyName = new Paragraph("ACME Corporation", companyNameFont);
-            companyName.setAlignment(Element.ALIGN_CENTER);
-            document.add(companyName);
-
-            Font companyAddressFont = FontFactory.getFont(FontFactory.HELVETICA, 12, BaseColor.DARK_GRAY);
-            Paragraph companyAddress = new Paragraph("1234 Market Street, City, Country\nPhone: +1 234 567 8900\nEmail: info@acme.com", companyAddressFont);
-            companyAddress.setAlignment(Element.ALIGN_CENTER);
-            document.add(companyAddress);
-
-            document.add(Chunk.NEWLINE);
-
-            // Bill title
-            Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16);
-            Paragraph title = new Paragraph("Customer Bill Receipt", titleFont);
-            title.setAlignment(Element.ALIGN_CENTER);
-            document.add(title);
-
-            document.add(Chunk.NEWLINE);
-
-            // Customer details table
-            PdfPTable customerTable = new PdfPTable(2);
-            customerTable.setWidthPercentage(100);
-            customerTable.setSpacingBefore(10f);
-            customerTable.setSpacingAfter(10f);
-
-            // Column widths
-            float[] columnWidths = {2f, 4f};
-            customerTable.setWidths(columnWidths);
-
-            // Table header style
-            Font headFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD);
-
-            customerTable.addCell(new PdfPCell(new Phrase("Name", headFont)));
-           // customerTable.addCell(new PdfPCell(new Phrase(bill.getName())));
-
-            customerTable.addCell(new PdfPCell(new Phrase("Email", headFont)));
-            customerTable.addCell(new PdfPCell(new Phrase(bill.getEmail())));
-
-            customerTable.addCell(new PdfPCell(new Phrase("Phone", headFont)));
-            customerTable.addCell(new PdfPCell(new Phrase(bill.getPhone())));
-
-            customerTable.addCell(new PdfPCell(new Phrase("GST Number", headFont)));
-           // customerTable.addCell(new PdfPCell(new Phrase(bill.getGst())));
-
-            document.add(customerTable);
-
-            // Amount details table
-            PdfPTable amountTable = new PdfPTable(2);
-            amountTable.setWidthPercentage(50);
-            amountTable.setHorizontalAlignment(Element.ALIGN_RIGHT);
-            amountTable.setSpacingBefore(10f);
-
-            amountTable.setWidths(new float[]{3f, 2f});
-
-            amountTable.addCell(new PdfPCell(new Phrase("Description", headFont)));
-            amountTable.addCell(new PdfPCell(new Phrase("Amount", headFont)));
-
-            amountTable.addCell(new PdfPCell(new Phrase("Service Charges")));
-            amountTable.addCell(new PdfPCell(new Phrase(String.format("₹ %.2f", bill.getAmount()))));
-
-            //double gstAmount = bill.getAmount() * 0.18; // assuming 18% GST
-            amountTable.addCell(new PdfPCell(new Phrase("GST (18%)")));
-           // amountTable.addCell(new PdfPCell(new Phrase(String.format("₹ %.2f", gstAmount))));
-
-            PdfPCell totalLabelCell = new PdfPCell(new Phrase("Total Amount", headFont));
-            totalLabelCell.setBackgroundColor(BaseColor.LIGHT_GRAY);
-            amountTable.addCell(totalLabelCell);
-
-            // PdfPCell totalAmountCell = new PdfPCell(new Phrase(String.format("₹ %.2f", bill.getAmount() + gstAmount), headFont));
-            // totalAmountCell.setBackgroundColor(BaseColor.LIGHT_GRAY);
-            // amountTable.addCell(totalAmountCell);
-
-            document.add(amountTable);
-
-            document.add(Chunk.NEWLINE);
-
-            // Thank you note
-            Font thanksFont = FontFactory.getFont(FontFactory.HELVETICA_OBLIQUE, 12, BaseColor.DARK_GRAY);
-            Paragraph thanks = new Paragraph("Thank you for your purchase!", thanksFont);
-            thanks.setAlignment(Element.ALIGN_CENTER);
-            document.add(thanks);
-
-            document.close();
+            Image logo = Image.getInstance("src/main/resources/static/logo.png");
+            logo.scaleToFit(100, 50);
+            logo.setAlignment(Element.ALIGN_CENTER);
+            document.add(logo);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("Logo not found: " + e.getMessage());
         }
 
-        return new ByteArrayInputStream(out.toByteArray());
+        // Company Header
+        Font companyNameFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, BaseColor.BLUE);
+        Paragraph companyName = new Paragraph("ACME Corporation", companyNameFont);
+        companyName.setAlignment(Element.ALIGN_CENTER);
+        document.add(companyName);
+
+        Font companyAddressFont = FontFactory.getFont(FontFactory.HELVETICA, 11, BaseColor.DARK_GRAY);
+        Paragraph companyAddress = new Paragraph("1234 Market Street, City, Country\nPhone: +1 234 567 8900 | Email: info@acme.com", companyAddressFont);
+        companyAddress.setAlignment(Element.ALIGN_CENTER);
+        document.add(companyAddress);
+
+        document.add(Chunk.NEWLINE);
+
+        // Invoice Header
+        Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16);
+        Paragraph title = new Paragraph("CUSTOMER INVOICE", titleFont);
+        title.setAlignment(Element.ALIGN_CENTER);
+        document.add(title);
+
+        document.add(Chunk.NEWLINE);
+
+        // Invoice Details (Bill No & Date)
+        PdfPTable invoiceInfo = new PdfPTable(2);
+        invoiceInfo.setWidthPercentage(100);
+        invoiceInfo.setWidths(new float[]{1f, 1f});
+        invoiceInfo.getDefaultCell().setBorder(Rectangle.NO_BORDER);
+
+        invoiceInfo.addCell(new Phrase("Bill No: " + (bill.getBillNo() != null ? bill.getBillNo() : "-")));
+        invoiceInfo.addCell(new Phrase("Due Date: " + (bill.getDueDate() != null ? bill.getDueDate().toString() : "-")));
+        document.add(invoiceInfo);
+
+        document.add(Chunk.NEWLINE);
+
+        // Customer Details
+        Font headFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12);
+        PdfPTable customerTable = new PdfPTable(2);
+        customerTable.setWidthPercentage(100);
+        customerTable.setSpacingBefore(10f);
+        customerTable.setWidths(new float[]{2f, 4f});
+
+        customerTable.addCell(new PdfPCell(new Phrase("Customer Name", headFont)));
+        customerTable.addCell(new PdfPCell(new Phrase(bill.getCustomerName() != null ? bill.getCustomerName() : "-")));
+
+        customerTable.addCell(new PdfPCell(new Phrase("Email", headFont)));
+        customerTable.addCell(new PdfPCell(new Phrase(bill.getEmail() != null ? bill.getEmail() : "-")));
+
+        customerTable.addCell(new PdfPCell(new Phrase("Phone", headFont)));
+        customerTable.addCell(new PdfPCell(new Phrase(bill.getPhone() != null ? bill.getPhone() : "-")));
+
+        customerTable.addCell(new PdfPCell(new Phrase("Address", headFont)));
+        customerTable.addCell(new PdfPCell(new Phrase(bill.getAddress() != null ? bill.getAddress() : "-")));
+
+        customerTable.addCell(new PdfPCell(new Phrase("GSTIN", headFont)));
+        customerTable.addCell(new PdfPCell(new Phrase(bill.getGstin() != null ? bill.getGstin() : "-")));
+
+        document.add(customerTable);
+
+        document.add(Chunk.NEWLINE);
+
+        // Amount Table
+        PdfPTable amountTable = new PdfPTable(2);
+        amountTable.setWidthPercentage(60);
+        amountTable.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        amountTable.setSpacingBefore(10f);
+        amountTable.setWidths(new float[]{3f, 2f});
+
+        amountTable.addCell(new PdfPCell(new Phrase("Description", headFont)));
+        amountTable.addCell(new PdfPCell(new Phrase("Amount (₹)", headFont)));
+
+        // Service Amount
+        amountTable.addCell("Service Charges");
+        amountTable.addCell(String.format("₹ %.2f", bill.getAmount()));
+
+        // GST
+        double gstAmount = bill.getAmount().doubleValue() * 0.18;
+        amountTable.addCell("GST (18%)");
+        amountTable.addCell(String.format("₹ %.2f", gstAmount));
+
+        // Total
+        PdfPCell totalLabel = new PdfPCell(new Phrase("Total Payable", headFont));
+        totalLabel.setBackgroundColor(BaseColor.LIGHT_GRAY);
+        amountTable.addCell(totalLabel);
+
+        PdfPCell totalValue = new PdfPCell(new Phrase(String.format("₹ %.2f", bill.getAmount().doubleValue() + gstAmount), headFont));
+        totalValue.setBackgroundColor(BaseColor.LIGHT_GRAY);
+        amountTable.addCell(totalValue);
+
+        document.add(amountTable);
+
+        document.add(Chunk.NEWLINE);
+
+        // Footer
+        Font footerFont = FontFactory.getFont(FontFactory.HELVETICA_OBLIQUE, 11, BaseColor.DARK_GRAY);
+        Paragraph footer = new Paragraph("Thank you for your business!\nPlease make the payment before the due date.", footerFont);
+        footer.setAlignment(Element.ALIGN_CENTER);
+        document.add(footer);
+
+        document.add(Chunk.NEWLINE);
+
+        Paragraph signature = new Paragraph("Authorized Signature\n_____________________", footerFont);
+        signature.setAlignment(Element.ALIGN_RIGHT);
+        document.add(signature);
+
+        document.close();
+    } catch (Exception e) {
+        e.printStackTrace();
     }
+
+    return new ByteArrayInputStream(out.toByteArray());
+}
 
     public void importFromExcel(MultipartFile file, String ownerEmail) {
         try (InputStream is = file.getInputStream(); Workbook workbook = new XSSFWorkbook(is)) {
