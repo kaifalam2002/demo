@@ -149,8 +149,9 @@
             <input type="number" step="0.01" id="amount" name="amount" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;"/>
           </div>
 
-          <button type="submit" style="background:#4285F4; color:white; padding:10px 20px; border:none; border-radius:6px; cursor:pointer; font-weight:500;">Generate Bill</button>
+          <button type="submit" id="generateBillBtn" style="background:#4285F4; color:white; padding:10px 20px; border:none; border-radius:6px; cursor:pointer; font-weight:500;">Generate Bill</button>
         </form>
+        <div id="billGenerateStatus" style="margin-top:20px; padding:15px; border-radius:6px; font-weight:500; display:none;"></div>
       </div>
 
       <!-- Bulk Upload Section -->
@@ -259,7 +260,7 @@
             <td>${bill.dueDate || ''}</td>
             <td>${bill.amount.toFixed(2)}</td>
             <td>${bill.isPaid ? 'Yes' : 'No'}</td>
-            <td><button class="toggle-paid" onclick="togglePaid(${bill.id})">Change Paid Status</button></td>
+            <td><button class="toggle-paid" id="toggle-btn-${bill.id}" onclick="togglePaid(${bill.id})">Change Paid Status</button></td>
           `;
           tbody.appendChild(row);
         });
@@ -273,15 +274,40 @@
     }
 
     async function togglePaid(billId) {
-      try {
-        const response = await fetch(`/api/update-paid-status/${billId}`, { method: 'PUT' });
-        if (!response.ok) throw new Error("Failed to update paid status");
-        loadBills();
-      } catch (err) {
-        console.error(err);
-        alert("Error updating paid status.");
-      }
-    }
+  const btn = document.getElementById(`toggle-btn-${billId}`);
+  const originalText = btn.innerHTML;
+
+  // Disable button and show loader
+  btn.disabled = true;
+  btn.innerHTML = `
+    Processing...
+    <span style="
+      display:inline-block;
+      border:3px solid #f3f3f3;
+      border-top:3px solid #4285F4;
+      border-radius:50%;
+      width:14px;
+      height:14px;
+      animation:spin 1s linear infinite;
+      margin-left:8px;
+      vertical-align:middle;
+    "></span>
+  `;
+
+  try {
+    const response = await fetch(`/api/update-paid-status/${billId}`, { method: 'PUT' });
+    if (!response.ok) throw new Error("Failed to update paid status");
+    await loadBills();
+  } catch (err) {
+    console.error(err);
+    alert("Error updating paid status.");
+  } finally {
+    // Re-enable button and restore original text
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+  }
+}
+
 
     async function loadUserInfo() {
       try {
@@ -347,13 +373,73 @@
       });
     }
 
-    // Bulk Upload Form Handler
+    // Generate Bill Form Handler
     document.addEventListener("DOMContentLoaded", () => {
       loadBills();
       loadUserInfo();
 
+      // Handle Generate Bill form submission
+      const billForm = document.getElementById('billForm');
+      const generateBtn = document.getElementById('generateBillBtn');
+      const statusDiv = document.getElementById('billGenerateStatus');
+
+      billForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        generateBtn.disabled = true;
+        generateBtn.innerHTML = 'Processing... <span style="display:inline-block; border:3px solid #f3f3f3; border-top:3px solid white; border-radius:50%; width:16px; height:16px; animation:spin 1s linear infinite; margin-left:8px; vertical-align:middle;"></span>';
+        
+        statusDiv.style.display = 'block';
+        statusDiv.textContent = 'Generating bill, please wait...';
+        statusDiv.style.background = '#d1ecf1';
+        statusDiv.style.color = '#0c5460';
+        statusDiv.style.border = '1px solid #bee5eb';
+        
+        try {
+          const formData = new FormData(billForm);
+          const response = await fetch('/api/download-bill', {
+            method: 'POST',
+            body: formData
+          });
+          
+          if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `bill_${Date.now()}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            
+            statusDiv.textContent = 'Bill generated successfully!';
+            statusDiv.style.background = '#d4edda';
+            statusDiv.style.color = '#155724';
+            statusDiv.style.border = '1px solid #c3e6cb';
+            
+            billForm.reset();
+            
+            setTimeout(() => {
+              statusDiv.style.display = 'none';
+            }, 3000);
+          } else {
+            throw new Error('Failed to generate bill');
+          }
+        } catch (error) {
+          statusDiv.textContent = 'Error generating bill: ' + error.message;
+          statusDiv.style.background = '#f8d7da';
+          statusDiv.style.color = '#721c24';
+          statusDiv.style.border = '1px solid #f5c6cb';
+        } finally {
+          generateBtn.disabled = false;
+          generateBtn.innerHTML = 'Generate Bill';
+        }
+      });
+
+      // Bulk Upload Form Handler
       const bulkUploadForm = document.getElementById('bulkUploadForm');
-      const statusDiv = document.getElementById('uploadStatus');
+      const uploadStatusDiv = document.getElementById('uploadStatus');
       const uploadBtn = document.getElementById('uploadBtn');
 
       bulkUploadForm.addEventListener('submit', async (e) => {
@@ -364,12 +450,12 @@
         const file = fileInput.files[0];
         
         if (!file) {
-          showStatus('Please select a file', 'error');
+          showUploadStatus('Please select a file', 'error');
           return;
         }
         
         if (!file.name.endsWith('.xlsx')) {
-          showStatus('Please upload a valid Excel file (.xlsx)', 'error');
+          showUploadStatus('Please upload a valid Excel file (.xlsx)', 'error');
           return;
         }
         
@@ -379,7 +465,7 @@
         
         uploadBtn.disabled = true;
         uploadBtn.innerHTML = 'Uploading... <span style="display:inline-block; border:3px solid #f3f3f3; border-top:3px solid white; border-radius:50%; width:16px; height:16px; animation:spin 1s linear infinite; margin-left:8px; vertical-align:middle;"></span>';
-        showStatus('Uploading file, please wait...', 'info');
+        showUploadStatus('Uploading file, please wait...', 'info');
         
         try {
           const response = await fetch('/api/upload', {
@@ -390,43 +476,42 @@
           const result = await response.text();
           
           if (response.ok) {
-            showStatus(result || 'File uploaded and data imported successfully!', 'success');
+            showUploadStatus(result || 'File uploaded and data imported successfully!', 'success');
             bulkUploadForm.reset();
-            // Reload bills to show newly imported data
             setTimeout(() => {
               loadBills();
             }, 1000);
           } else {
-            showStatus(result || 'Upload failed. Please try again.', 'error');
+            showUploadStatus(result || 'Upload failed. Please try again.', 'error');
           }
         } catch (error) {
-          showStatus('Network error: ' + error.message, 'error');
+          showUploadStatus('Network error: ' + error.message, 'error');
         } finally {
           uploadBtn.disabled = false;
           uploadBtn.innerHTML = 'Upload Excel';
         }
       });
 
-      function showStatus(message, type) {
-        statusDiv.textContent = message;
-        statusDiv.className = '';
-        statusDiv.style.display = 'block';
+      function showUploadStatus(message, type) {
+        uploadStatusDiv.textContent = message;
+        uploadStatusDiv.className = '';
+        uploadStatusDiv.style.display = 'block';
         
         if (type === 'success') {
-          statusDiv.style.background = '#d4edda';
-          statusDiv.style.color = '#155724';
-          statusDiv.style.border = '1px solid #c3e6cb';
+          uploadStatusDiv.style.background = '#d4edda';
+          uploadStatusDiv.style.color = '#155724';
+          uploadStatusDiv.style.border = '1px solid #c3e6cb';
           setTimeout(() => {
-            statusDiv.style.display = 'none';
+            uploadStatusDiv.style.display = 'none';
           }, 5000);
         } else if (type === 'error') {
-          statusDiv.style.background = '#f8d7da';
-          statusDiv.style.color = '#721c24';
-          statusDiv.style.border = '1px solid #f5c6cb';
+          uploadStatusDiv.style.background = '#f8d7da';
+          uploadStatusDiv.style.color = '#721c24';
+          uploadStatusDiv.style.border = '1px solid #f5c6cb';
         } else if (type === 'info') {
-          statusDiv.style.background = '#d1ecf1';
-          statusDiv.style.color = '#0c5460';
-          statusDiv.style.border = '1px solid #bee5eb';
+          uploadStatusDiv.style.background = '#d1ecf1';
+          uploadStatusDiv.style.color = '#0c5460';
+          uploadStatusDiv.style.border = '1px solid #bee5eb';
         }
       }
     });
