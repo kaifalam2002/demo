@@ -28,33 +28,23 @@ private CustomerInvoiceRepository repo;
     private UserRepository userRepository;
 
     @PostMapping("/download-bill")
-public ResponseEntity<byte[]> downloadBill(@RequestBody CustomerInvoice bill,  HttpSession session) {
-    // 1. Save to database
-    
+public ResponseEntity<byte[]> downloadBill(@ModelAttribute CustomerInvoice bill, HttpSession session) {
     String ownerEmail = (String) session.getAttribute("loggedInEmail");
     bill.setOwnerEmail(ownerEmail);
 
-    CustomerInvoice saved = repo.save(bill); // saves the record
+    CustomerInvoice saved = repo.save(bill);
 
-    // 2. Generate PDF using saved entity
-    ByteArrayInputStream pdfStream = null;
-    try {
-        pdfStream = PdfGeneratorService.generatePdf(saved);
-    } catch (Exception e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
-    }
+    ByteArrayInputStream pdfStream = PdfGeneratorService.generatePdf(saved);
 
-    // 3. Set headers and return PDF
     HttpHeaders headers = new HttpHeaders();
     headers.add("Content-Disposition", "attachment; filename=bill.pdf");
 
-    return ResponseEntity
-            .ok()
+    return ResponseEntity.ok()
             .headers(headers)
             .contentType(MediaType.APPLICATION_PDF)
             .body(pdfStream.readAllBytes());
 }
+
 
 @GetMapping("/track-bills")
 public ResponseEntity<ArrayList<CustomerInvoice>> trackBills(HttpSession session) {
