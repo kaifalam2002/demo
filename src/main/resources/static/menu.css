@@ -244,4 +244,14 @@
       .sidebar {
         width: 200px;
       }
+      /* Highlight overdue bills */
+td .overdue {
+    color: red !important;  /* force red */
+    font-weight: bold;
+}
+
+
+
+
+
     }

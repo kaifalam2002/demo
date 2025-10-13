@@ -42,6 +42,19 @@ public class CustomerInvoice {
     @Column(name = "is_paid")
     private Boolean isPaid = false;
 
+    public Integer getMailsSent() {
+        return mailsSent;
+    }
+
+    public void setMailsSent(Integer mailsSent) {
+        this.mailsSent = mailsSent;
+    }
+
+    @Column(name = "mails_sent")
+    private Integer mailsSent;
+
+
+
     // Getters and Setters
     public Long getId() {
         return id;
