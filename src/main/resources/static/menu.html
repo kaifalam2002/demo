@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css"/>
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
   <link rel="stylesheet" href="menu.css" />
 </head>
@@ -96,6 +97,10 @@
       <!-- Invoices Section -->
       <div id="invoices" class="section" style="display:none;">
   <h2>All Invoices</h2>
+  <div style="margin-bottom: 10px;">
+  <button id="exportBtn" style="background:#34A853; color:white; padding:8px 15px; border:none; border-radius:6px; cursor:pointer; font-weight:500;">Export to Excel</button>
+</div>
+
   <table id="billsTable" class="display">
     <thead>
       <tr>
@@ -567,6 +572,16 @@ function initializeDataTable() {
     ]
   });
 }
+
+document.getElementById('exportBtn').addEventListener('click', () => {
+  const table = document.getElementById('billsTable');
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.table_to_sheet(table);
+  XLSX.utils.book_append_sheet(wb, ws, "Invoices");
+
+  XLSX.writeFile(wb, `invoices_${Date.now()}.xlsx`);
+});
+
 
   </script>
 
