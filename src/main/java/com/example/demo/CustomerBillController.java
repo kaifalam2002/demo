@@ -34,6 +34,9 @@ private CustomerInvoiceRepository repo;
      @Autowired
     private PdfGeneratorService pdfGeneratorService;
 
+    @Autowired
+    private WhatsappTemplateSender whatsappTemplateSender;
+
     @PostMapping("/download-bill")
 public ResponseEntity<byte[]> downloadBill(@ModelAttribute CustomerInvoice bill, HttpSession session) {
     String ownerEmail = (String) session.getAttribute("loggedInEmail");
@@ -152,5 +155,10 @@ public ResponseEntity<String> sendMail(@RequestParam String to, @RequestParam St
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error deleting invoices: " + e.getMessage());
         }
+    }
+
+    @PostMapping("/send")
+    public String sendMessage(@RequestParam String to, @RequestParam String message) {
+        return whatsappTemplateSender.sendCustomMessage(to, message);
     }
 }
