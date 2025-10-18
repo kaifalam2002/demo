@@ -3,11 +3,14 @@ package com.example.demo;
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -117,6 +120,37 @@ public ResponseEntity<String> sendMail(@RequestParam String to, @RequestParam St
             return ResponseEntity.ok("File uploaded and data imported successfully.");
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Error: " + e.getMessage());
+        }
+    }
+
+   @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    @PostMapping("/delete-invoices")
+    public ResponseEntity<?> deleteInvoices(@RequestBody ArrayList<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return ResponseEntity.badRequest().body("No invoice IDs provided");
+        }
+
+        String idList = ids.stream().map(String::valueOf).collect(Collectors.joining(","));
+
+        try {
+            // ✅ 1️⃣ Backup data — include ID explicitly
+            String backupQuery = "INSERT INTO customer_invoice_backup " +
+                    "(id, customer_name, address, phone, gstin, due_date, amount, email, is_paid, owner_email, mails_sent) " +
+                    "SELECT id, customer_name, address, phone, gstin, due_date, amount, email, is_paid, owner_email, mails_sent " +
+                    "FROM customer_invoice WHERE id IN (" + idList + ")";
+            jdbcTemplate.update(backupQuery);
+
+            // ✅ 2️⃣ Delete from main table
+            String deleteQuery = "DELETE FROM customer_invoice WHERE id IN (" + idList + ")";
+            jdbcTemplate.update(deleteQuery);
+
+            return ResponseEntity.ok("Invoices moved to backup and deleted successfully");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error deleting invoices: " + e.getMessage());
         }
     }
 }
