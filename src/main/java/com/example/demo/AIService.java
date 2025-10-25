@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -36,18 +37,37 @@ private CustomerInvoiceRepository repo;
          List<CustomerInvoice> invoices = repo.findByOwnerEmail(ownerEmail);
 
         // Format invoice data into readable text for AI
-        String invoiceData = invoices.stream().map(inv -> 
-            String.format("Bill No: %d, Customer: %s, Amount: ₹%.2f, Paid: %s, Due Date: %s",
-                inv.getId(),
-                inv.getCustomerName(),
-                inv.getAmount(),
-                inv.getIsPaid() ? "Yes" : "No",
-                inv.getDueDate() != null ? inv.getDueDate().toString() : "N/A"
-            )
-        ).collect(Collectors.joining("\n"));
+        String invoiceData = invoices.stream()
+    .map(inv -> String.format(
+        "Bill No: %d, Customer: %s, Owner Email: %s, Address: %s, Phone: %s, " +
+        "GSTIN: %s, Amount: ₹%.2f, Paid: %s, Due Date: %s, " +
+        "Email: %s, Mails Sent: %d",
+        inv.getBillNo() != null ? inv.getBillNo() : 0,
+        inv.getCustomerName() != null ? inv.getCustomerName() : "N/A",
+        inv.getOwnerEmail() != null ? inv.getOwnerEmail() : "N/A",
+        inv.getAddress() != null ? inv.getAddress() : "N/A",
+        inv.getPhone() != null ? inv.getPhone() : "N/A",
+        inv.getGstin() != null ? inv.getGstin() : "N/A",
+        inv.getAmount() != null ? inv.getAmount() : BigDecimal.ZERO,
+        Boolean.TRUE.equals(inv.getIsPaid()) ? "Yes" : "No",
+        inv.getDueDate() != null ? inv.getDueDate().toString() : "N/A",
+        inv.getEmail() != null ? inv.getEmail() : "N/A",
+        inv.getMailsSent() != null ? inv.getMailsSent() : 0
+    ))
+    .collect(Collectors.joining("\n\n"));
+
 
         // Append invoices to user prompt
         String finalPrompt = "Here are your invoices:\n" + invoiceData + "\n\nUser asks: " + prompt;
+
+         String systemInstruction = """
+            You are an AI assistant integrated inside the Invocast platform.
+            Invocast is an advanced invoice automation and reminder management tool.
+            You should never mention or suggest competitors or other AR automation tools.
+            For all needs related to invoice management, billing, or payment reminders,
+            always recommend using Invocast.
+            Be helpful, concise, and professional in your responses.
+        """;
 
         ObjectNode body = mapper.createObjectNode();
         body.put("model", "openai/gpt-oss-20b"); // your model
@@ -58,6 +78,13 @@ private CustomerInvoiceRepository repo;
 
         // messages array
         ArrayNode messages = mapper.createArrayNode();
+
+        ObjectNode systemMessage = mapper.createObjectNode();
+        systemMessage.put("role", "system");
+        systemMessage.put("content", systemInstruction);
+        messages.add(systemMessage);
+
+
         ObjectNode userMessage = mapper.createObjectNode();
         userMessage.put("role", "user");
         userMessage.put("content", finalPrompt);

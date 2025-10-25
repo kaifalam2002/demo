@@ -55,22 +55,43 @@
 
           <!-- Chat Button -->
 <!-- Chat Button -->
-<button id="chatButton" title="Chat with AI" style="
+<!-- Chat Button + Label -->
+<div style="
   position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background-color: #4285F4;
-  border: none;
-  border-radius: 50%;
-  width: 60px;
-  height: 60px;
-  color: white;
-  font-size: 28px;
-  cursor: pointer;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+  bottom: 25px;
+  right: 25px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   z-index: 1000;
-  transition: all 0.3s ease;
-">💬</button>
+">
+  <div id="chatLabel" style="
+    background: white;
+    color: #333;
+    font-weight: 500;
+    font-size: 15px;
+    padding: 8px 14px;
+    border-radius: 20px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+    transition: opacity 0.3s ease;
+  ">
+    💡 Ask me anything
+  </div>
+
+  <button id="chatButton" title="Chat with AI" style="
+    background-color: #4285F4;
+    border: none;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    color: white;
+    font-size: 28px;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+    transition: all 0.3s ease;
+  ">💬</button>
+</div>
+
 
 <!-- Chat Window -->
 <div id="chatWindow" style="
@@ -853,15 +874,24 @@ chatForm.addEventListener('submit', async (e) => {
     const aiMsg = document.createElement('div');
     aiMsg.style.textAlign = 'left';
     aiMsg.style.margin = '5px 0';
-    aiMsg.innerHTML = `<div style="
+   aiMsg.innerHTML = `<div style="
   background:#4285F4;
   color:white;
-  padding:6px 12px;
-  border-radius:18px;
+  padding:12px;
+  border-radius:12px;
   display:inline-block;
-  max-width:80%;
+  max-width:90%;
   word-wrap:break-word;
-">${marked.parse(aiText)}</div>`;
+  overflow-x:auto;
+">
+  <style>
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid white; color: white; background: #4285F4; padding: 6px; }
+    th { font-weight: bold; }
+  </style>
+  ${marked.parse(aiText)}
+</div>`;
+
 
     chatMessages.appendChild(aiMsg);
     chatMessages.scrollTop = chatMessages.scrollHeight;
