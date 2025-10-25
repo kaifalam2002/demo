@@ -19,8 +19,7 @@ import org.json.JSONObject;
 @Service
 public class AIService {
 
-     @Value("${groq.api.key}")
-    private String apiKey;
+    private static final String apiKey = System.getenv("groq_apiKey");
 
     @Value("${groq.api.url}")
     private String apiUrl;
