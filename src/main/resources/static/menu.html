@@ -759,9 +759,33 @@ const chatMessages = document.getElementById('chatMessages');
 const chatForm = document.getElementById('chatForm');
 const chatInput = document.getElementById('chatInput');
 
+let welcomeShown = false; // flag to show welcome message only once
+
 chatButton.addEventListener('click', () => {
   chatWindow.style.display = 'flex';
+
+  if (!welcomeShown) {
+    const welcomeMsg = document.createElement('div');
+    welcomeMsg.style.textAlign = 'left';
+    welcomeMsg.style.margin = '5px 0';
+    welcomeMsg.innerHTML = `<span style="
+      background:#4285F4;
+      color:white;
+      padding:6px 12px;
+      border-radius:18px;
+      display:inline-block;
+      max-width:80%;
+      word-wrap:break-word;
+    ">
+    Hello! How may I help you today?
+    </span>`;
+    chatMessages.appendChild(welcomeMsg);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    welcomeShown = true; // mark as shown
+  }
 });
+
 
 closeChat.addEventListener('click', () => {
   chatWindow.style.display = 'none';
