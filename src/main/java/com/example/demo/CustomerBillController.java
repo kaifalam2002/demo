@@ -37,6 +37,9 @@ private CustomerInvoiceRepository repo;
     @Autowired
     private WhatsappTemplateSender whatsappTemplateSender;
 
+     @Autowired
+    private AIService aiService;
+
     @PostMapping("/download-bill")
 public ResponseEntity<byte[]> downloadBill(@ModelAttribute CustomerInvoice bill, HttpSession session) {
     String ownerEmail = (String) session.getAttribute("loggedInEmail");
@@ -161,4 +164,16 @@ public ResponseEntity<String> sendMail(@RequestParam String to, @RequestParam St
     public String sendMessage(@RequestParam String to, @RequestParam String message) {
         return whatsappTemplateSender.sendCustomMessage(to, message);
     }
+
+   @GetMapping("/ask")
+    public String ask(@RequestParam String prompt, HttpSession session) throws Exception {
+        // Get ownerEmail from session
+        String ownerEmail = (String) session.getAttribute("loggedInEmail");
+        if (ownerEmail == null) {
+            throw new Exception("User not logged in");
+        }
+
+        return aiService.askAI(prompt, ownerEmail);
+    }
+
 }
