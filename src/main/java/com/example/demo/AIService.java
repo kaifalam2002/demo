@@ -39,7 +39,7 @@ private CustomerInvoiceRepository repo;
         // Format invoice data into readable text for AI
         String invoiceData = invoices.stream().map(inv -> 
             String.format("Bill No: %d, Customer: %s, Amount: ₹%.2f, Paid: %s, Due Date: %s",
-                inv.getBillNo(),
+                inv.getId(),
                 inv.getCustomerName(),
                 inv.getAmount(),
                 inv.getIsPaid() ? "Yes" : "No",
