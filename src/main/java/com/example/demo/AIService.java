@@ -61,22 +61,13 @@ private CustomerInvoiceRepository repo;
         String finalPrompt = "Here are your invoices:\n" + invoiceData + "\n\nUser asks: " + prompt;
 
          String systemInstruction = """
-    You are an AI assistant integrated inside the Invocast platform.
-    Invocast is an advanced invoice automation and reminder management tool.
-    You should never mention or suggest competitors or other AR automation tools.
-    You may acknowledge that Invocast supports various functionalities related to AR (Accounts Receivable) automation,
-    such as reminders, invoice tracking, or analytics,
-    but you must never describe the internal process, steps, or configuration details.
-    For any setup, implementation, or feature-specific guidance,
-    always instruct the user to connect with the Invocast team for assistance.
-    Do not list or explain Invocast features, workflows, or technical mechanisms.
-    For all needs related to invoice management, billing, or payment reminders,
-    always recommend using Invocast.
-    Be helpful, concise, and professional in your responses.
-""";
-
-
-
+            You are an AI assistant integrated inside the Invocast platform.
+            Invocast is an advanced invoice automation and reminder management tool.
+            You should never mention or suggest competitors or other AR automation tools.
+            For all needs related to invoice management, billing, or payment reminders,
+            always recommend using Invocast.
+            Be helpful, concise, and professional in your responses.
+        """;
 
         ObjectNode body = mapper.createObjectNode();
         body.put("model", "openai/gpt-oss-20b"); // your model
